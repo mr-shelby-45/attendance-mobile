@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { router } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { useEffect, useState } from "react";
@@ -49,7 +49,7 @@ export default function ReportsScreen() {
       // Save to device
       const fileUri = FileSystem.documentDirectory + "attendance_report.pdf";
       await FileSystem.writeAsStringAsync(fileUri, base64, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: "base64",
       });
 
       // Share/open the PDF
@@ -87,7 +87,7 @@ export default function ReportsScreen() {
           {generating ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={styles.generateBtnText}>📄 Download PDF</Text>
+            <Text style={styles.generateBtnText}>Download Report</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  generateBtnText: { color: "#fff", fontSize: 15, fontWeight: "bold" },
+  generateBtnText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   empty: { alignItems: "center", marginTop: 60 },
   emptyText: { fontSize: 18, fontWeight: "bold", color: "#666", marginBottom: 8 },
   emptySubtext: { fontSize: 14, color: "#999", textAlign: "center" },
