@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -16,6 +17,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -56,14 +58,23 @@ export default function LoginScreen() {
           autoCapitalize="none"
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputFlex}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>      
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={22}
+              color="#999"
+            />
+          </TouchableOpacity>
+        </View>
+        
         <TouchableOpacity
           style={styles.forgotBtn}
           onPress={() => router.push("/(auth)/forgot")}
@@ -128,5 +139,20 @@ const styles = StyleSheet.create({
   height: 120,
   alignSelf: "center",
   marginBottom: 60,
+  },
+  inputWrapper: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#fff",
+  borderRadius: 8,
+  paddingHorizontal: 14,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: "#e0e0e0",
+  },
+  inputFlex: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 16,
   },
 });

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -19,6 +20,7 @@ export default function ForgotPasswordScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [step, setStep] = useState(1); // step 1: enter email, step 2: enter otp + new password
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleForgot = async () => {
     if (!email) {
@@ -108,13 +110,22 @@ export default function ForgotPasswordScreen() {
               keyboardType="number-pad"
               maxLength={6}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="New Password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-            />
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={22}
+                  color="#999"
+                />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               style={styles.button}
               onPress={handleReset}
@@ -157,4 +168,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  inputWrapper: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#fff",
+  borderRadius: 8,
+  paddingHorizontal: 14,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: "#e0e0e0",
+  },
+  inputFlex: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 16,
+  },
 });

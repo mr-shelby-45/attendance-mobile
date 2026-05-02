@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ export default function RegisterScreen() {
   const [colleges, setColleges] = useState([]);
   const [selectedCollege, setSelectedCollege] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetchColleges();
@@ -112,13 +114,22 @@ export default function RegisterScreen() {
           onChangeText={setRegNumber}
           autoCapitalize="characters"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputFlex}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>      
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={22}
+              color="#999"
+            />
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Select College</Text>
         <View style={styles.pickerWrapper}>
@@ -196,5 +207,20 @@ const styles = StyleSheet.create({
   height: 120,
   alignSelf: "center",
   marginBottom: 16,
+  },
+  inputWrapper: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#fff",
+  borderRadius: 8,
+  paddingHorizontal: 14,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: "#e0e0e0",
+  },
+  inputFlex: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 16,
   },
 });
