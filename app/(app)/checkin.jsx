@@ -10,9 +10,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { checkIn } from "../../services/attendance.service";
+import { checkIn, getWeeklySummary } from "../../services/attendance.service";
 import { getStoredStudent, logoutStudent } from "../../services/auth.service";
 import { getUnitsByCollege } from "../../services/college.service";
+
+const STATUS_ICON = {
+  PRESENT: "✅",
+  MISSED: "❌",
+  PENDING: "─",
+};
+
+const STATUS_COLOR = {
+  PRESENT: "#e8f5e9",
+  MISSED: "#fdecea",
+  PENDING: "#f5f5f5",
+};
 
 export default function CheckInScreen() {
   const [student, setStudent] = useState(null);
@@ -20,23 +32,32 @@ export default function CheckInScreen() {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingUnits, setLoadingUnits] = useState(true);
+  const [weeklySummary, setWeeklySummary] = useState([]);
+  const [weekNumber, setWeekNumber] = useState(null);
+  const [loadingWeekly, setLoadingWeekly] = useState(true);
 
   useEffect(() => {
-    loadStudentAndUnits();
+    loadData();
   }, []);
 
-  const loadStudentAndUnits = async () => {
+  const loadData = async () => {
     try {
       const stored = await getStoredStudent();
       setStudent(stored);
+
       if (stored?.collegeId) {
-        const data = await getUnitsByCollege(stored.collegeId);
-        setUnits(data);
+        const unitsData = await getUnitsByCollege(stored.collegeId);
+        setUnits(unitsData);
       }
+
+      const weekly = await getWeeklySummary();
+      setWeeklySummary(weekly.summary);
+      setWeekNumber(weekly.weekNumber);
     } catch (err) {
-      Alert.alert("Error", "Failed to load units.");
+      Alert.alert("Error", "Failed to load data.");
     } finally {
       setLoadingUnits(false);
+      setLoadingWeekly(false);
     }
   };
 
@@ -50,10 +71,42 @@ export default function CheckInScreen() {
     try {
       const result = await checkIn(selectedUnit);
       Alert.alert("Success ✅", result.message);
+      // Refresh weekly summary after check-in
+      const weekly = await getWeeklySummary();
+      setWeeklySummary(weekly.summary);
+      setWeekNumber(weekly.weekNumber);
     } catch (err) {
+      // Authentication cancelled or failed
+      if (err.message === "AUTH_FAILED") {
+        Alert.alert(
+          "Authentication Failed",
+          "You must verify your identity to check in."
+        );
+        return;
+      }
+
+      // Fake GPS detected
+      if (err.message === "FAKE_GPS") {
+        Alert.alert(
+          "⚠️ Fake Location Detected",
+          "A mock location application has been detected on your device. This attempt has been logged. You will now be logged out.",
+          [
+            {
+              text: "OK",
+              onPress: async () => {
+                await logoutStudent();
+                router.replace("/(auth)/login");
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      // Backend errors
       Alert.alert(
         "Check-in Failed",
-        err.response?.data?.error || "Something went wrong."
+        err.response?.data?.error || err.message || "Something went wrong."
       );
     } finally {
       setLoading(false);
@@ -67,11 +120,10 @@ export default function CheckInScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>
-            Hello, {student?.firstName} 👋
-          </Text>
+          <Text style={styles.greeting}>Welcome, {student?.firstName}</Text>
           <Text style={styles.subGreeting}>{student?.regNumber}</Text>
         </View>
         <TouchableOpacity onPress={handleLogout}>
@@ -79,6 +131,7 @@ export default function CheckInScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Check-in Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Mark Attendance</Text>
         <Text style={styles.cardSubtitle}>
@@ -121,11 +174,43 @@ export default function CheckInScreen() {
         )}
       </View>
 
+      {/* Weekly Summary Card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Week {weekNumber} — Attendance
+        </Text>
+        <Text style={styles.cardSubtitle}>
+          Resets every Sunday at midnight
+        </Text>
+
+        {loadingWeekly ? (
+          <ActivityIndicator color="#1a1a2e" style={{ marginVertical: 20 }} />
+        ) : weeklySummary.length === 0 ? (
+          <Text style={styles.emptyText}>No units found for your college.</Text>
+        ) : (
+          weeklySummary.map((item) => (
+            <View
+              key={item.unitId}
+              style={[styles.weekRow, { backgroundColor: STATUS_COLOR[item.status] }]}
+            >
+              <View style={styles.weekRowLeft}>
+                <Text style={styles.weekUnitCode}>{item.unitCode}</Text>
+                <Text style={styles.weekUnitName}>{item.unitName}</Text>
+              </View>
+              <Text style={styles.weekStatus}>
+                {STATUS_ICON[item.status]}
+              </Text>
+            </View>
+          ))
+        )}
+      </View>
+
+      {/* Reports Link */}
       <TouchableOpacity
         style={styles.reportsBtn}
         onPress={() => router.push("/(app)/reports")}
       >
-        <Text style={styles.reportsBtnText}>View Attendance Reports →</Text>
+        <Text style={styles.reportsBtnText}>View Full Attendance Reports →</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -145,15 +230,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 24,
-    marginBottom: 24,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
-  cardTitle: { fontSize: 20, fontWeight: "bold", color: "#1a1a2e", marginBottom: 8 },
-  cardSubtitle: { fontSize: 14, color: "#666", marginBottom: 24 },
+  cardTitle: { fontSize: 18, fontWeight: "bold", color: "#1a1a2e", marginBottom: 4 },
+  cardSubtitle: { fontSize: 13, color: "#999", marginBottom: 16 },
   label: { fontSize: 14, color: "#666", marginBottom: 6 },
   pickerWrapper: {
     backgroundColor: "#f5f5f5",
@@ -169,6 +254,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  weekRowLeft: { flex: 1 },
+  weekUnitCode: { fontSize: 13, fontWeight: "bold", color: "#1a1a2e" },
+  weekUnitName: { fontSize: 12, color: "#666", marginTop: 2 },
+  weekStatus: { fontSize: 20 },
+  emptyText: { color: "#999", fontSize: 14, textAlign: "center", paddingVertical: 16 },
   reportsBtn: { alignItems: "center", padding: 16 },
   reportsBtnText: { color: "#4a90e2", fontSize: 16, fontWeight: "bold" },
 });
