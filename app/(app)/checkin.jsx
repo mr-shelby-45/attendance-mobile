@@ -246,12 +246,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
     marginBottom: 24,
+    zIndex: 1000,
+    elevation: 1000,
   },
   button: {
     backgroundColor: "#1a1a2e",
     borderRadius: 8,
     padding: 16,
     alignItems: "center",
+    zIndex: 1,
+    elevation: 1,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   weekRow: {
