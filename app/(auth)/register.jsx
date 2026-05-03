@@ -136,10 +136,12 @@ export default function RegisterScreen() {
           <Picker
             selectedValue={selectedCollege}
             onValueChange={(val) => setSelectedCollege(val)}
+            style={{ color: "#1a1a2e" }}
+            dropdownIconColor="#1a1a2e"
           >
-            <Picker.Item label="-- Select College --" value="" />
+            <Picker.Item label="-- Select College --" value="" color="#999" />
             {colleges.map((c) => (
-              <Picker.Item key={c.id} label={c.name} value={c.id} />
+              <Picker.Item key={c.id} label={c.name} value={c.id} color="#1a1a2e" />
             ))}
           </Picker>
         </View>

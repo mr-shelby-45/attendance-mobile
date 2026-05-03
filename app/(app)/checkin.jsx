@@ -147,13 +147,16 @@ export default function CheckInScreen() {
               <Picker
                 selectedValue={selectedUnit}
                 onValueChange={(val) => setSelectedUnit(val)}
+                style={{ color: "#1a1a2e" }}
+                dropdownIconColor="#1a1a2e"
               >
-                <Picker.Item label="-- Select Unit --" value="" />
+                <Picker.Item label="-- Select Unit --" value="" color="#999" />
                 {units.map((u) => (
                   <Picker.Item
                     key={u.id}
                     label={`${u.code} - ${u.name}`}
                     value={u.code}
+                    color="#1a1a2e"
                   />
                 ))}
               </Picker>
